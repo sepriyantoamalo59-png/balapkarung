@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Balap Karung IPAS</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+        }
+        
+        @keyframes hop {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .hopping {
+            animation: hop 0.5s ease-in-out;
+        }
+        
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(-10deg); }
+            75% { transform: scale(1.2) rotate(10deg); }
+        }
+        
+        .celebrating {
+            animation: celebrate 0.6s ease-in-out infinite;
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full w-full">
+  <div id="app" class="h-full w-full flex flex-col" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"><!-- Header -->
+   <header class="text-center py-6 px-4">
+    <h1 id="gameTitle" class="text-white font-bold mb-2" style="font-size: 48px;">Balap Karung IPAS</h1>
+    <p id="subtitle" class="text-white" style="font-size: 20px;">Materi: Alat Indra Manusia</p>
+   </header><!-- Main Content -->
+   <main class="flex-1 flex items-center justify-center px-4 overflow-auto">
+    <div class="w-full max-w-6xl"><!-- Start Screen -->
+     <div id="startScreen" class="text-center">
+      <div class="bg-white rounded-3xl shadow-2xl p-12 mb-6">
+       <div class="text-6xl mb-6">
+        🎒🏃
+       </div>
+       <h2 class="text-gray-800 font-bold mb-4" style="font-size: 32px;">Selamat Datang!</h2>
+       <p class="text-gray-600 mb-8" style="font-size: 18px;">Jawab soal pilihan ganda tentang alat indra manusia.<br>
+         Jawaban benar = maju 1 langkah. Tim tercepat menang!</p><button id="startBtn" class="px-12 py-4 rounded-full text-white font-bold transition-all hover:shadow-lg transform hover:scale-105" style="font-size: 24px; background-color: #f59e0b;"> Mulai Permainan </button>
+      </div>
+     </div><!-- Game Screen -->
+     <div id="gameScreen" class="hidden"><!-- Race Track -->
+      <div class="bg-white rounded-3xl shadow-2xl p-8 mb-6">
+       <div class="mb-8">
+        <h3 class="text-center text-gray-700 font-bold mb-6" style="font-size: 24px;">Lintasan Balap</h3><!-- Team Kiri Track -->
+        <div class="mb-6">
+         <div class="flex items-center justify-between mb-2"><span class="font-bold text-blue-600" style="font-size: 20px;">Tim Kiri 🔵</span> <span id="scoreLeft" class="text-gray-600" style="font-size: 18px;">0/5</span>
+         </div>
+         <div class="relative h-16 bg-gradient-to-r from-blue-100 to-blue-50 rounded-lg border-2 border-blue-300 flex items-center px-2">
+          <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-l-lg"></div>
+          <div class="absolute right-0 top-0 bottom-0 w-1 bg-green-500 rounded-r-lg"></div>
+          <div id="playerLeft" class="text-4xl transition-all duration-500 ease-out" style="margin-left: 0;">
+           🎒
+          </div><span class="absolute right-4 text-2xl">🏁</span>
+         </div>
+        </div><!-- Team Kanan Track -->
+        <div>
+         <div class="flex items-center justify-between mb-2"><span class="font-bold text-red-600" style="font-size: 20px;">Tim Kanan 🔴</span> <span id="scoreRight" class="text-gray-600" style="font-size: 18px;">0/5</span>
+         </div>
+         <div class="relative h-16 bg-gradient-to-r from-red-100 to-red-50 rounded-lg border-2 border-red-300 flex items-center px-2">
+          <div class="absolute left-0 top-0 bottom-0 w-1 bg-red-500 rounded-l-lg"></div>
+          <div class="absolute right-0 top-0 bottom-0 w-1 bg-green-500 rounded-r-lg"></div>
+          <div id="playerRight" class="text-4xl transition-all duration-500 ease-out" style="margin-left: 0;">
+           🎒
+          </div><span class="absolute right-4 text-2xl">🏁</span>
+         </div>
+        </div>
+       </div><!-- Current Turn -->
+       <div id="turnIndicator" class="text-center py-4 rounded-xl mb-4" style="background-color: #eff6ff;">
+        <p class="font-bold" style="font-size: 20px;">Giliran: <span id="currentTurn">Tim Kiri 🔵</span></p>
+       </div><!-- Question Card -->
+       <div id="questionCard" class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-200">
+        <p class="font-bold text-gray-700 mb-1" style="font-size: 16px;">Soal <span id="questionNumber">1</span> dari 10</p>
+        <h4 id="questionText" class="text-gray-800 font-bold mb-6" style="font-size: 22px;"></h4>
+        <div id="optionsContainer" class="space-y-3"></div>
+       </div>
+      </div>
+     </div><!-- Winner Screen -->
+     <div id="winnerScreen" class="hidden text-center">
+      <div class="bg-white rounded-3xl shadow-2xl p-12">
+       <div id="winnerEmoji" class="text-8xl mb-6 celebrating">
+        🏆
+       </div>
+       <h2 id="winnerText" class="text-gray-800 font-bold mb-4" style="font-size: 40px;"></h2>
+       <p class="text-gray-600 mb-8" style="font-size: 20px;">Selamat! Kalian hebat! 🎉</p><button id="resetBtn" class="px-12 py-4 rounded-full text-white font-bold transition-all hover:shadow-lg transform hover:scale-105" style="font-size: 24px; background-color: #f59e0b;"> Main Lagi </button>
+      </div>
+     </div>
+    </div>
+   </main>
+  </div>
+  <script>
+        const defaultConfig = {
+            game_title: "Balap Karung IPAS",
+            subtitle: "Materi: AlatRa Manusia",
+            start_button: "Mulai Permainan",
+            reset_button: "Main Lagi",
+            background_color: "#667eea",
+            surface_color: "#ffffff",
+            text_color: "#374151",
+            primary_action_color: "#f59e0b",
+            secondary_action_color: "#8b5cf6",
+            font_family: "system-ui",
+            font_size: 16
+        };
+
+        const questions = [
+            {
+                question: "Alat indra manakah yang berfungsi untuk melihat?",
+                options: ["Mata", "Telinga", "Hidung", "Lidah"],
+                correct: 0
+            },
+            {
+                question: "Bagian mata yang berfungsi menangkap cahaya adalah?",
+                options: ["Pupil", "Retina", "Kornea", "Iris"],
+                correct: 1
+            },
+            {
+                question: "Alat indra yang berfungsi untuk mendengar adalah?",
+                options: ["Hidung", "Kulit", "Telinga", "Lidah"],
+                correct: 2
+            },
+            {
+                question: "Rasa manis dapat dirasakan oleh lidah di bagian?",
+                options: ["Ujung lidah", "Pangkal lidah", "Sisi lidah", "Tengah lidah"],
+                correct: 0
+            },
+            {
+                question: "Indra peraba terdapat di seluruh bagian?",
+                options: ["Mata", "Kulit", "Mulut", "Telinga"],
+                correct: 1
+            },
+            {
+                question: "Hidung berfungsi untuk mencium?",
+                options: ["Suara", "Cahaya", "Bau", "Rasa"],
+                correct: 2
+            },
+            {
+                question: "Gendang telinga berfungsi untuk?",
+                options: ["Melihat", "Menerima getaran suara", "Mencium", "Merasa"],
+                correct: 1
+            },
+            {
+                question: "Bagian lidah yang merasakan rasa pahit adalah?",
+                options: ["Ujung", "Pangkal", "Sisi kiri", "Sisi kanan"],
+                correct: 1
+            },
+            {
+                question: "Kornea mata berfungsi untuk?",
+                options: ["Melindungi mata", "Mendengar", "Mencium", "Merasa"],
+                correct: 0
+            },
+            {
+                question: "Kulit dapat merasakan sensasi?",
+                options: ["Hanya panas", "Hanya dingin", "Panas, dingin, dan sakit", "Hanya sakit"],
+                correct: 2
+            }
+        ];
+
+        let currentQuestion = 0;
+        let currentTeam = 'left';
+        let scoreLeft = 0;
+        let scoreRight = 0;
+        const totalSteps = 5;
+
+        function updateUI() {
+            const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
+            const baseFont = config.font_family || defaultConfig.font_family;
+            const baseFontSize = config.font_size || defaultConfig.font_size;
+            
+            document.getElementById('app').style.background = `linear-gradient(135deg, ${config.background_color || defaultConfig.background_color} 0%, #764ba2 100%)`;
+            
+            document.getElementById('gameTitle').textContent = config.game_title || defaultConfig.game_title;
+            document.getElementById('gameTitle').style.fontFamily = `${baseFont}, system-ui, sans-serif`;
+            document.getElementById('gameTitle').style.fontSize = `${baseFontSize * 3}px`;
+            document.getElementById('gameTitle').style.color = config.text_color || defaultConfig.text_color;
+            
+            document.getElementById('subtitle').textContent = config.subtitle || defaultConfig.subtitle;
+            document.getElementById('subtitle').style.fontFamily = `${baseFont}, system-ui, sans-serif`;
+            document.getElementById('subtitle').style.fontSize = `${baseFontSize * 1.25}px`;
+            document.getElementById('subtitle').style.color = config.text_color || defaultConfig.text_color;
+            
+            document.getElementById('startBtn').textContent = config.start_button || defaultConfig.start_button;
+            document.getElementById('startBtn').style.fontFamily = `${baseFont}, system-ui, sans-serif`;
+            document.getElementById('startBtn').style.fontSize = `${baseFontSize * 1.5}px`;
+            document.getElementById('startBtn').style.backgroundColor = config.primary_action_color || defaultConfig.primary_action_color;
+            
+            document.getElementById('resetBtn').textContent = config.reset_button || defaultConfig.reset_button;
+            document.getElementById('resetBtn').style.fontFamily = `${baseFont}, system-ui, sans-serif`;
+            document.getElementById('resetBtn').style.fontSize = `${baseFontSize * 1.5}px`;
+            document.getElementById('resetBtn').style.backgroundColor = config.primary_action_color || defaultConfig.primary_action_color;
+        }
+
+        function showQuestion() {
+            if (currentQuestion >= questions.length) {
+                checkWinner();
+                return;
+            }
+
+            const q = questions[currentQuestion];
+            document.getElementById('questionNumber').textContent = currentQuestion + 1;
+            document.getElementById('questionText').textContent = q.question;
+            document.getElementById('currentTurn').textContent = currentTeam === 'left' ? 'Tim Kiri 🔵' : 'Tim Kanan 🔴';
+            document.getElementById('turnIndicator').style.backgroundColor = currentTeam === 'left' ? '#eff6ff' : '#fef2f2';
+            
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            q.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'w-full text-left px-6 py-4 rounded-xl font-semibold transition-all transform hover:scale-102 hover:shadow-lg';
+                button.style.backgroundColor = '#f3f4f6';
+                button.style.color = '#374151';
+                button.style.fontSize = '18px';
+                button.textContent = option;
+                
+                button.addEventListener('click', () => checkAnswer(index));
+                button.addEventListener('mouseenter', () => {
+                    button.style.backgroundColor = '#e5e7eb';
+                });
+                button.addEventListener('mouseleave', () => {
+                    button.style.backgroundColor = '#f3f4f6';
+                });
+                
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedIndex) {
+            const q = questions[currentQuestion];
+            const buttons = document.querySelectorAll('#optionsContainer button');
+            
+            buttons.forEach(btn => btn.disabled = true);
+            
+            if (selectedIndex === q.correct) {
+                buttons[selectedIndex].style.backgroundColor = '#10b981';
+                buttons[selectedIndex].style.color = '#ffffff';
+                
+                if (currentTeam === 'left') {
+                    scoreLeft++;
+                    document.getElementById('scoreLeft').textContent = `${scoreLeft}/${totalSteps}`;
+                    movePlayer('left', scoreLeft);
+                } else {
+                    scoreRight++;
+                    document.getElementById('scoreRight').textContent = `${scoreRight}/${totalSteps}`;
+                    movePlayer('right', scoreRight);
+                }
+                
+                setTimeout(() => {
+                    currentQuestion++;
+                    currentTeam = currentTeam === 'left' ? 'right' : 'left';
+                    showQuestion();
+                }, 1500);
+            } else {
+                buttons[selectedIndex].style.backgroundColor = '#ef4444';
+                buttons[selectedIndex].style.color = '#ffffff';
+                buttons[q.correct].style.backgroundColor = '#10b981';
+                buttons[q.correct].style.color = '#ffffff';
+                
+                setTimeout(() => {
+                    currentQuestion++;
+                    currentTeam = currentTeam === 'left' ? 'right' : 'left';
+                    showQuestion();
+                }, 2000);
+            }
+        }
+
+        function movePlayer(team, score) {
+            const player = document.getElementById(team === 'left' ? 'playerLeft' : 'playerRight');
+            const trackWidth = player.parentElement.offsetWidth - 100;
+            const stepSize = trackWidth / totalSteps;
+            const newPosition = Math.min(score * stepSize, trackWidth);
+            
+            player.classList.add('hopping');
+            player.style.marginLeft = `${newPosition}px`;
+            
+            setTimeout(() => {
+                player.classList.remove('hopping');
+            }, 500);
+        }
+
+        function checkWinner() {
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('winnerScreen').classList.remove('hidden');
+            
+            if (scoreLeft > scoreRight) {
+                document.getElementById('winnerText').textContent = 'Tim Kiri Menang! 🔵';
+                document.getElementById('winnerEmoji').textContent = '🏆';
+            } else if (scoreRight > scoreLeft) {
+                document.getElementById('winnerText').textContent = 'Tim Kanan Menang! 🔴';
+                document.getElementById('winnerEmoji').textContent = '🏆';
+            } else {
+                document.getElementById('winnerText').textContent = 'Seri! 🤝';
+                document.getElementById('winnerEmoji').textContent = '🤝';
+            }
+        }
+
+        function resetGame() {
+            currentQuestion = 0;
+            currentTeam = 'left';
+            scoreLeft = 0;
+            scoreRight = 0;
+            
+            document.getElementById('scoreLeft').textContent = '0/5';
+            document.getElementById('scoreRight').textContent = '0/5';
+            document.getElementById('playerLeft').style.marginLeft = '0';
+            document.getElementById('playerRight').style.marginLeft = '0';
+            
+            document.getElementById('winnerScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+        }
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            showQuestion();
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', resetGame);
+
+        async function onConfigChange(config) {
+            updateUI();
+        }
+
+        if (window.elementSdk) {
+            window.elementSdk.init({
+                defaultConfig,
+                onConfigChange,
+                mapToCapabilities: (config) => ({
+                    recolorables: [
+                        {
+                            get: () => config.background_color || defaultConfig.background_color,
+                            set: (value) => {
+                                config.background_color = value;
+                                window.elementSdk.setConfig({ background_color: value });
+                            }
+                        },
+                        {
+                            get: () => config.surface_color || defaultConfig.surface_color,
+                            set: (value) => {
+                                config.surface_color = value;
+                                window.elementSdk.setConfig({ surface_color: value });
+                            }
+                        },
+                        {
+                            get: () => config.text_color || defaultConfig.text_color,
+                            set: (value) => {
+                                config.text_color = value;
+                                window.elementSdk.setConfig({ text_color: value });
+                            }
+                        },
+                        {
+                            get: () => config.primary_action_color || defaultConfig.primary_action_color,
+                            set: (value) => {
+                                config.primary_action_color = value;
+                                window.elementSdk.setConfig({ primary_action_color: value });
+                            }
+                        }
+                    ],
+                    borderables: [],
+                    fontEditable: {
+                        get: () => config.font_family || defaultConfig.font_family,
+                        set: (value) => {
+                            config.font_family = value;
+                            window.elementSdk.setConfig({ font_family: value });
+                        }
+                    },
+                    fontSizeable: {
+                        get: () => config.font_size || defaultConfig.font_size,
+                        set: (value) => {
+                            config.font_size = value;
+                            window.elementSdk.setConfig({ font_size: value });
+                        }
+                    }
+                }),
+                mapToEditPanelValues: (config) => new Map([
+                    ["game_title", config.game_title || defaultConfig.game_title],
+                    ["subtitle", config.subtitle || defaultConfig.subtitle],
+                    ["start_button", config.start_button || defaultConfig.start_button],
+                    ["reset_button", config.reset_button || defaultConfig.reset_button]
+                ])
+            });
+        }
+
+        updateUI();
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9af39097167fd210',t:'MTc2NTk0NDU2NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
